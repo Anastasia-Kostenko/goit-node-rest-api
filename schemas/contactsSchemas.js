@@ -12,16 +12,20 @@ export const createContactSchema = Joi.object({
     .required()
     .messages({ "any.required": "Email є обов'язковим полем" }),
   phone: Joi.string()
-    .pattern(/^\+380\d{9}$/)
-    .message("Невірний формат - номер має бути +380.........")
+    .min(3)
+    .message("Phone має бути мінімум 3 символи!")
+    .pattern(/^\(\d{3}\) \d{3}-\d{4}$/)
+    .message("Невірний формат - номер має бути (123) 456-7890")
     .required()
     .messages({ "any.required": "Телефон є обов'язковим полем" }),
+  favorite: Joi.boolean(),
 });
 
 export const updateContactSchema = Joi.object({
   name: Joi.string().min(3).message("Ім'я має бути мінімум 3 символи!"),
   email: Joi.string().email().message("Невірний формат електронної адреси"),
   phone: Joi.string()
-    .pattern(/^\+380\d{9}$/)
-    .message("Невірний формат - номер має бути +380........."),
+    .pattern(/^\(\d{3}\) \d{3}-\d{4}$/)
+    .message("Невірний формат - номер має бути  (123) 456-7890"),
+  favorite: Joi.boolean(),
 });

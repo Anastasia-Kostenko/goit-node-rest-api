@@ -1,81 +1,89 @@
 import contactsService from "../services/contactsServices.js";
 import HttpError from "../helpers/HttpError.js";
 
-export const getAllContacts = (req, res) => {
-  contactsService
-    .listContacts()
-    .then((contacts) => res.status(200).json(contacts))
-    .catch((err) => {
-      const error = new HttpError(500, err.message);
-      next(error);
-    });
+export const getAllContacts = async (req, res, next) => {
+  try {
+    const contacts = await contactsService.listContacts();
+    res.status(200).json(contacts);
+  } catch (err) {
+    next(HttpError(500, "Server error"));
+  }
 };
 
-export const getOneContact = (req, res) => {
+export const getOneContact = async (req, res, next) => {
   const id = req.params.id;
-  contactsService
-    .getContactById(id)
-    .then((contact) => {
-      if (contact) {
-        res.status(200).json(contact);
-      } else {
-        res.status(404).json({ message: "Not found" });
-      }
-    })
-    .catch((err) => {
-      const error = new HttpError(500, err.message);
-      next(error);
-    });
+  try {
+    const contact = await contactsService.getContactById(id);
+    if (contact) {
+      res.status(200).json(contact);
+    } else {
+      next(HttpError(404));
+    }
+  } catch (err) {
+    next(HttpError(500, "Server error"));
+  }
 };
 
-export const deleteContact = (req, res) => {
+export const deleteContact = async (req, res, next) => {
   const id = req.params.id;
-  contactsService
-    .removeContact(id)
-    .then((contact) => {
-      if (contact) {
-        res.status(200).json(contact);
-      } else {
-        res.status(404).json({ message: "Not found" });
-      }
-    })
-    .catch((err) => {
-      const error = new HttpError(500, err.message);
-      next(error);
-    });
+  try {
+    const contact = await contactsService.removeContact(id);
+    if (contact) {
+      res.status(200).json(contact);
+    } else {
+      next(HttpError(404));
+    }
+  } catch (err) {
+    next(HttpError(500, "Server error"));
+  }
 };
 
-export const createContact = (req, res) => {
+export const createContact = async (req, res, next) => {
   const { name, email, phone } = req.body;
-  contactsService
-    .addContact(name, email, phone)
-    .then((contact) => {
-      res.status(201).json(contact);
-    })
-    .catch((err) => {
-      const error = new HttpError(500, err.message);
-      next(error);
-    });
+  try {
+    const contact = await contactsService.addContact(name, email, phone);
+    res.status(201).json(contact);
+  } catch (err) {
+    next(HttpError(500, "Server error"));
+  }
 };
 
-export const updateContact = (req, res) => {
+export const updateContact = async (req, res, next) => {
   if (Object.keys(req.body).length === 0) {
-    return res
-      .status(400)
-      .json({ message: "Body must have at least one field" });
+    return next(HttpError(400, "Body must have at least one field"));
   }
 
-  contactsService
-    .updateContact(req.params.id, req.body)
-    .then((contact) => {
-      if (contact) {
-        res.status(200).json(contact);
-      } else {
-        res.status(404).json({ message: "Not found" });
-      }
-    })
-    .catch((err) => {
-      const error = new HttpError(500, err.message);
-      next(error);
-    });
+  const id = req.params.id;
+  try {
+    const contact = await contactsService.updateContact(id, req.body);
+    if (contact) {
+      res.status(200).json(contact);
+    } else {
+      next(HttpError(404));
+    }
+  } catch (err) {
+    next(HttpError(500, "Server error"));
+  }
+};
+
+export const updateStatusContact = async (req, res, next) => {
+  const id = req.params.id;
+
+  if (
+    Object.keys(req.body).length !== 1 ||
+    typeof req.body.favorite !== "boolean"
+  ) {
+    return next(HttpError(400, "Body must have one boolean field: favorite"));
+  }
+
+  try {
+    const contact = await contactsService.updateStatusContact(id, req.body);
+    if (contact) {
+      res.status(200).json(contact);
+    } else {
+      next(HttpError(404));
+    }
+  } catch (err) {
+    next(HttpError(500, "Server error"));
+  }
 };
