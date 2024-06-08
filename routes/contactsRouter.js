@@ -1,6 +1,6 @@
 import express from "express";
 
-import isValidId from "../helpers/isValidId.js";
+import isValidId from "../helpers/isValidld.js";
 import validateBody from "../helpers/validateBody.js";
 import * as schema from "../schemas/contactsSchemas.js";
 
