@@ -8,6 +8,30 @@ import path from "node:path";
 import usersService from "../services/usersServices.js";
 import HttpError from "../helpers/HttpError.js";
 
+export const changeAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) throw HttpError(400);
+    const tmpPath = req.file.path;
+    const newPath = path.resolve("public", "avatars", req.file.filename);
+
+    (await Jimp.read(tmpPath)).resize(250, 250).write(tmpPath);
+    await fs.rename(tmpPath, newPath);
+
+    const newAvatarURL = `/avatars/${req.file.filename}`;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatarURL: newAvatarURL },
+      { new: true }
+    );
+    if (!user) throw HttpError(401, "Not authorized");
+
+    res.json({ avatarURL: newAvatarURL });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const register = async (req, res, next) => {
   try {
     const { password, email } = req.body;
@@ -125,32 +149,5 @@ export const updateSubscription = async (req, res, next) => {
     }
   } catch (err) {
     next(HttpError(500, "Server error"));
-  }
-};
-
-export const changeAvatar = async (req, res, next) => {
-  try {
-    if (!req.file) {
-      return next(HttpError(400, "File must have two field"));
-    }
-    const newPath = path.resolve("public", "avatars", req.file.filename);
-    const avatarURL = path.join("/avatars", req.file.filename);
-
-    const file = await Jimp.read(req.file.path);
-    await file.resize(250, 250).quality(60).writeAsync(newPath);
-
-    await fs.rename(req.file.path, newPath);
-
-    const user = await usersService.updateAvatar(req.user.id, avatarURL);
-
-    if (user) {
-      res.status(200).json({
-        avatarURL: user.avatarURL,
-      });
-    } else {
-      next(HttpError(404));
-    }
-  } catch (error) {
-    next(error);
   }
 };
